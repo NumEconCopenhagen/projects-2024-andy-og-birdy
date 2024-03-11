@@ -2,8 +2,7 @@
 
 **Group members:**
 - Bertram Pohti Toft - HTQ483
-- B
-- C
+- Andreas Bjerg Larsen - bvg504
 
 This repository contains  
 1. Inaugural project. 
