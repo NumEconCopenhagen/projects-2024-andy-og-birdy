@@ -1,7 +1,7 @@
 # \[Group name\]
 
 **Group members:**
-- A
+- Bertram Pohti Toft - HTQ483
 - B
 - C
 
