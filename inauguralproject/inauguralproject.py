@@ -10,7 +10,7 @@ def square(x):
 
 
 from types import SimpleNamespace
-
+import numpy as np
 
 
 class ExchangeEconomyClass:
@@ -39,15 +39,15 @@ class ExchangeEconomyClass:
 
     def demand_A(self,p1):
         par = self.par
-        x2A = (1-par.alpha)((p1*par.w1A+par.w2A))
-        x1A = par.alpha((p1*par.w1A+par.w2A)/(p1))
+        x1A = par.alpha*((p1*par.w1A+par.w2A)/p1)
+        x2A = (1-par.alpha)*((p1*par.w1A+par.w2A))
         return x1A, x2A
 
 
     def demand_B(self,p1):
         par = self.par
-        x2B = (1-par.beta)((p1*(1-par.w1A)+(1-par.w2A)))
-        x1B = par.beta((p1*(1-par.w1A+(1-par.w2A))/(p1)))
+        x1B = par.beta*((p1*(1-par.w1A+(1-par.w2A))/(p1)))
+        x2B = (1-par.beta)*((p1*(1-par.w1A)+(1-par.w2A)))
         return x1B, x2B
 
     def check_market_clearing(self,p1):
@@ -61,3 +61,29 @@ class ExchangeEconomyClass:
         eps2 = x2A-par.w2A + x2B-(1-par.w2A)
 
         return eps1,eps2
+    
+
+    def market_clearing_price(self, maxitter = 500, p1_guess):
+
+        p1 = p1_guess
+
+        eps = 1e-6
+        eps1,eps2 = self.check_market_clearing(p1)    
+        t = 0
+        while True:
+            if np.abs(eps1) < eps or t >= maxitter:
+                print(p)
+                pass    
+            p1 = p1 + eps1
+
+            t +=1
+
+            if t < 5 or t%25 == 0:
+                print(f'{t:3d}: p1 = {p1:12.8f} -> excess demand -> {eps1:14.8f}')
+            elif t == 5:
+                print('   ...')
+
+            return p1
+        
+
+        
