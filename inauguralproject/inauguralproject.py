@@ -8,7 +8,10 @@ def square(x):
     y = x**2
     return y
 
+
 from types import SimpleNamespace
+
+
 
 class ExchangeEconomyClass:
 
