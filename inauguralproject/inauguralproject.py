@@ -78,12 +78,10 @@ class ExchangeEconomyClass:
             if np.abs(eps1) < eps or t >= maxitter:
                 break 
             p1= p1 + 0.5*eps1/par.alpha
-            
+
             t +=1
 
         return p1
-
-
 
     def optimal_price(self):
         def objective(p1):
@@ -96,3 +94,4 @@ class ExchangeEconomyClass:
         
         result = minimize_scalar(objective, bounds=(0, 2), method='bounded')
         return result.x, -result.fun  # Return the optimal price and the corresponding utility
+ 
