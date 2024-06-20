@@ -134,18 +134,19 @@ class ProductionEconomyWithExternalityClass():
         print(f'labor market : {sol.labor_mkt_clearing:.8f}')
         print(f'total pollution: {sol.pollution_level:.4f}')
 
+
 class ProductionEconomyWithWorkerPollution():
     def __init__(self):
         self.par = SimpleNamespace()
 
         # a. parameters
         self.par.kappa = 0.1  # home production
-        self.par.omega = 10   # disutility of labor supply factor
+        self.par.omega = 5   # disutility of labor supply factor
         self.par.eta = 1.50   # curvature of disutility of labor supply
         self.par.alpha = 0.50 # curvature of production function
         self.par.beta = 0.75  # curvature of pollution disutility
-        self.par.Nw = 1       # number of workers
-        self.par.Nc = 1       # number of capitalists
+        self.par.Nw = 1000       # number of workers
+        self.par.Nc = 10      # number of capitalists
         self.par.delta = 0.1  # scaling factor for pollution disutility
 
         # b. solution
@@ -175,7 +176,7 @@ class ProductionEconomyWithWorkerPollution():
         w = sol.w
 
         # a. solve
-        obj = lambda l: -self.utility_w((w*l)/p, l)
+        obj = lambda l: -self.utility_w((w * l) / p, l)
         res = optimize.minimize_scalar(obj, bounds=(0, 1), method='bounded')
 
         # b. save
@@ -191,7 +192,7 @@ class ProductionEconomyWithWorkerPollution():
         pi = sol.pi
 
         # a. solve
-        obj = lambda l: -self.utility_c((w*l + pi)/p, l)
+        obj = lambda l: -self.utility_c((w * l + pi) / p, l)
         res = optimize.minimize_scalar(obj, bounds=(0, 1), method='bounded')
 
         # b. save
@@ -232,7 +233,7 @@ class ProductionEconomyWithWorkerPollution():
 
         # c. calculate total labor and pollution
         sol.total_labor = par.Nw * sol.l_w_star + par.Nc * sol.l_c_star
-        sol.pollution_level = self.pollution_disutility(par.Nw * sol.l_w_star)  # Only workers affected
+        sol.pollution_level = self.pollution_disutility(sol.total_labor)  # Affecting total labor
 
         # d. market clearing
         sol.goods_mkt_clearing = par.Nw * sol.c_w_star + par.Nc * sol.c_c_star - sol.y_star
@@ -247,11 +248,11 @@ class ProductionEconomyWithWorkerPollution():
         def obj(w):
             sol.w = w
             self.evaluate_equilibrium()
-            return sol.goods_mkt_clearing
+            return np.abs(sol.goods_mkt_clearing) + np.abs(sol.labor_mkt_clearing)
 
         # Find equilibrium wage using optimization
-        res = optimize.root_scalar(obj, bracket=[0.1, 1.5], method='bisect')
-        sol.w = res.root
+        res = optimize.minimize_scalar(obj, bounds=[0.1, 1.5], method='bounded')
+        sol.w = res.x
 
         # Evaluate equilibrium with the found wage
         self.evaluate_equilibrium()
@@ -271,36 +272,39 @@ class ProductionEconomyWithWorkerPollution():
         par = self.par
         sol = self.sol
 
-        # Define social welfare function
+    # Define social welfare function
         def social_welfare(l):
             l_w, l_c = l
             y = (l_w + l_c) ** par.alpha
-            pi = y - l_w - l_c
+            pi = y - (l_w + l_c)
             c_w = (pi * l_w / (l_w + l_c)) + par.kappa
             c_c = (pi * l_c / (l_w + l_c)) + par.kappa
-            u_w = np.log(c_w) - par.omega * l_w ** par.eta - self.pollution_disutility(l_w)
-            u_c = np.log(c_c) - par.omega * l_c ** par.eta
-            return -(u_w + u_c)  # negative for minimization
+            total_labor = l_w + l_c
+            u_w = self.utility_w(c_w, l_w)
+            u_c = self.utility_c(c_c, l_c)
+            pollution = self.pollution_disutility(total_labor)
+            return -(u_w + u_c - pollution)  # Minimize negative welfare including pollution
 
         # Solve for the social planner's equilibrium
         bounds = [(0, 1), (0, 1)]
-        initial_guess = [sol.l_w_star, sol.l_c_star]
+        initial_guess = [0.2, 0.2]  # Adjusted for possibly lower labor inputs
         res = optimize.minimize(social_welfare, initial_guess, bounds=bounds, method='L-BFGS-B')
 
         # Save results
         sol.l_w_sp, sol.l_c_sp = res.x
         y = (sol.l_w_sp + sol.l_c_sp) ** par.alpha
-        pi = y - sol.l_w_sp - sol.l_c_sp
+        pi = y - (sol.l_w_sp + sol.l_c_sp)
         sol.c_w_sp = (pi * sol.l_w_sp / (sol.l_w_sp + sol.l_c_sp)) + par.kappa
         sol.c_c_sp = (pi * sol.l_c_sp / (sol.l_w_sp + sol.l_c_sp)) + par.kappa
-        sol.u_w_sp = np.log(sol.c_w_sp) - par.omega * sol.l_w_sp ** par.eta - self.pollution_disutility(sol.l_w_sp)
-        sol.u_c_sp = np.log(sol.c_c_sp) - par.omega * sol.l_c_sp ** par.eta
-        sol.pollution_level_sp = self.pollution_disutility(sol.l_w_sp)
+        sol.u_w_sp = self.utility_w(sol.c_w_sp, sol.l_w_sp)
+        sol.u_c_sp = self.utility_c(sol.c_c_sp, sol.l_c_sp)
+        sol.pollution_level_sp = self.pollution_disutility(sol.l_w_sp + sol.l_c_sp)
 
         # Show results
         print(f'Social Planner Equilibrium')
         print(f'workers      : c = {sol.c_w_sp:6.4f}, l = {sol.l_w_sp:6.4f}, u = {sol.u_w_sp:7.4f}')
         print(f'capitalists  : c = {sol.c_c_sp:6.4f}, l = {sol.l_c_sp:6.4f}, u = {sol.u_c_sp:7.4f}')
+        print(f'total pollution: {sol.pollution_level_sp:.4f}')
         print(f'total pollution: {sol.pollution_level_sp:.4f}')
 
     def compare_equilibria(self):
@@ -316,3 +320,4 @@ class ProductionEconomyWithWorkerPollution():
         print(f'Social Welfare Comparison')
         print(f'Free Market  : {social_welfare_fm:7.4f}')
         print(f'Social Planner: {social_welfare_sp:7.4f}')
+
