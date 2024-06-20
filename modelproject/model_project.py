@@ -263,8 +263,6 @@ class ProductionEconomyWithWorkerPollution():
         print(f'Free Market Equilibrium')
         print(f'workers      : c = {sol.c_w_star:6.4f}, l = {sol.l_w_star:6.4f}, u = {u_w:7.4f}')
         print(f'capitalists  : c = {sol.c_c_star:6.4f}, l = {sol.l_c_star:6.4f}, u = {u_c:7.4f}')
-        print(f'goods market : {sol.goods_mkt_clearing:.8f}')
-        print(f'labor market : {sol.labor_mkt_clearing:.8f}')
         print(f'total pollution: {sol.pollution_level:.4f}')
 
     def social_planner(self):
@@ -282,8 +280,7 @@ class ProductionEconomyWithWorkerPollution():
             total_labor = l_w + l_c
             u_w = self.utility_w(c_w, l_w)
             u_c = self.utility_c(c_c, l_c)
-            pollution = self.pollution_disutility(total_labor)
-            return -(u_w + u_c - pollution)  # Minimize negative welfare including pollution
+            return -(u_w + u_c)  # Minimize negative welfare including pollution
 
         # Solve for the social planner's equilibrium
         bounds = [(0, 1), (0, 1)]
@@ -304,7 +301,6 @@ class ProductionEconomyWithWorkerPollution():
         print(f'Social Planner Equilibrium')
         print(f'workers      : c = {sol.c_w_sp:6.4f}, l = {sol.l_w_sp:6.4f}, u = {sol.u_w_sp:7.4f}')
         print(f'capitalists  : c = {sol.c_c_sp:6.4f}, l = {sol.l_c_sp:6.4f}, u = {sol.u_c_sp:7.4f}')
-        print(f'total pollution: {sol.pollution_level_sp:.4f}')
         print(f'total pollution: {sol.pollution_level_sp:.4f}')
 
     def compare_equilibria(self):
