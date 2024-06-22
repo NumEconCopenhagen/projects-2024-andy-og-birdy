@@ -216,7 +216,7 @@ class CareerChoiceModel:
                 friends_utility = self.par.v + friends_noise
 
                 # Calculate the prior expected utility, from where the excpeted utility is the average utility of the friends. (for each career choise)
-                prior_expected_utility = np.mean(friends_utility, axis=0)
+                prior_expected_utility = np.mean(friends_utility, axis=0) 
 
                 # Choose the career track with the highest expected utility.
                 chosen_career = np.argmax(prior_expected_utility)
@@ -230,7 +230,7 @@ class CareerChoiceModel:
                 # Calculate the realized utility of the chosen career track
                 realized_utility = self.par.v[chosen_career] + individual_noise[chosen_career]
 
-                # Store the results in the created arays.
+                # Store the results in the created arays, for bot the expected and realized results.
                 self.expected_utilities_prior[k, i - 1] = prior_expected_utility[chosen_career]
                 self.realized_utilities[k, i - 1] = realized_utility
 
@@ -243,7 +243,7 @@ class CareerChoiceModel:
 
                 # Looking at options in switching
                 switch_candidates = [j for j in range(self.par.J) if j != original_career]
-                #Looking at both alternative options
+                #Looking at both alternative options in each case:
                 switch_choice_1 = switch_candidates[0]
                 switch_choice_2 = switch_candidates[1]
 
@@ -262,7 +262,7 @@ class CareerChoiceModel:
                 epsilon_mean = self.epsilon_mean_by_original_choice[original_career]
 
                 # The person now knows both the utility and the mean of the epsilons as in exercise 2.A 
-                Utility_known_chosen = self.par.v[original_career] + epsilon_mean[original_career]
+                Utility_known_chosen = self.par.v[original_career]  + epsilon_mean[original_career]
                 # As explained we did not choose self.par.v[original_career]  + individual_noise[original_career]
 
 
@@ -274,12 +274,17 @@ class CareerChoiceModel:
                     else:
                         best_switch_choice = switch_choice_2
                         best_realized_utility = realized_utility_switched_2
+                
+                #Opdate if the priror expected utility is larger than the utility we now know.
 
                     chosen_career = best_switch_choice
                     Utility_known_chosen = best_realized_utility
+
+                #OPdating when the career switch orcure, and by witch original career.
                     self.switched_careers[k, i - 1] = 1
                     self.switched_careers_by_choice[original_career][k, i - 1] = 1
 
+                #opdate chosen careers and the utility
                 self.chosen_careers_switched[k, i - 1] = chosen_career
                 self.expected_utilities_post_switch[k, i - 1] = prior_expected_utility[chosen_career]
                 self.realized_utilities_post_switch[k, i - 1] = Utility_known_chosen        
@@ -294,6 +299,7 @@ class CareerChoiceModel:
     
     
     def analyze_results_switched(self):
+        #Takes the mean of the three wanted parameters, and finds the switch rate, as the mean of switched times for a given number of friends:
         chosen_careers_mean = np.mean(self.chosen_careers_switched, axis=0)
         expected_utilities_post_switch_mean = np.mean(self.expected_utilities_post_switch, axis=0)
         realized_utilities_post_switch_mean = np.mean(self.realized_utilities_post_switch, axis=0)
@@ -302,6 +308,7 @@ class CareerChoiceModel:
         return chosen_careers_mean, expected_utilities_post_switch_mean, realized_utilities_post_switch_mean, switch_rate 
 
     def visualize_results(self):
+        #Calls the functions.
         chosen_careers_mean, expected_utilities_prior_mean, realized_utilities_mean = self.analyze_results()
 
     #Plots the graps of the three vanted parameters.
