@@ -178,6 +178,13 @@ class CareerChoiceModel:
         self.par.v = np.array(v)
         self.seed = seed
         np.random.seed(self.seed)
+
+        # Initialize switched_careers_by_choice
+        self.switched_careers_by_choice = {
+            0: np.zeros((self.par.K, self.par.N)), 
+            1: np.zeros((self.par.K, self.par.N)), 
+            2: np.zeros((self.par.K, self.par.N))
+        }
         
     
     # Settin up arays to store the results, later on:
@@ -185,16 +192,10 @@ class CareerChoiceModel:
         self.expected_utilities_prior = np.zeros((self.par.K, self.par.N))
         self.realized_utilities = np.zeros((self.par.K, self.par.N))
 
-
         self.switched_careers = np.zeros((self.par.K, self.par.N))
         self.chosen_careers_switched = np.zeros((self.par.K, self.par.N))
         self.expected_utilities_post_switch = np.zeros((self.par.K, self.par.N))
         self.realized_utilities_post_switch = np.zeros((self.par.K, self.par.N))
-        self.switched_careers_by_choice = {1: np.zeros((self.par.K, self.par.N)), 
-                                           2: np.zeros((self.par.K, self.par.N)), 
-                                           3: np.zeros((self.par.K, self.par.N))}
-        
-
         
         #Setting up epsilon to be used later in 2.c, when they know the true value of the utility from working.
         self.epsilon_mean_by_original_choice = {}
@@ -237,36 +238,47 @@ class CareerChoiceModel:
                 #Setting up the original career:
                 original_career = chosen_career
 
-                #Looking at the switching price.
+                # Looking at the switching price.
                 self.par.switch_cost = 1
 
                 # Looking at options in switching
                 switch_candidates = [j for j in range(self.par.J) if j != original_career]
-                switch_choice = np.random.choice(switch_candidates)
+                #Looking at both alternative options
+                switch_choice_1 = switch_candidates[0]
+                switch_choice_2 = switch_candidates[1]
 
                 # The expectet utility priror to the switch:
                 prior_expected_utility_switched = np.copy(prior_expected_utility)
 
-                # The utility prior utility of the Switch:
-                prior_utility_from_switch = prior_expected_utility_switched[switch_choice] - self.par.switch_cost
-                
-                #The realiced utility after a Switch:
-                realized_utility_switched = self.par.v[switch_choice] + individual_noise[switch_choice] - self.par.switch_cost
+                 # The utility prior to the switch:
+                prior_utility_from_switch_1 = prior_expected_utility_switched[switch_choice_1] - self.par.switch_cost
+                prior_utility_from_switch_2 = prior_expected_utility_switched[switch_choice_2] - self.par.switch_cost
+
+                # The realized utility after a switch:
+                realized_utility_switched_1 = self.par.v[switch_choice_1] + individual_noise[switch_choice_1] - self.par.switch_cost
+                realized_utility_switched_2 = self.par.v[switch_choice_2] + individual_noise[switch_choice_2] - self.par.switch_cost
 
                 #The now known utility from the chosen career, can be find as the same way as in 2.A
                 epsilon_mean = self.epsilon_mean_by_original_choice[original_career]
                 Utility_known_chosen = self.par.v[original_career] + epsilon_mean[original_career]
                 
-                if prior_utility_from_switch > Utility_known_chosen:
-                    chosen_career = switch_choice
-                    realized_utility = realized_utility_switched
+                # Determine the best switch option
+                if prior_utility_from_switch_1 > Utility_known_chosen or prior_utility_from_switch_2 > Utility_known_chosen:
+                    if prior_utility_from_switch_1 > prior_utility_from_switch_2:
+                        best_switch_choice = switch_choice_1
+                        best_realized_utility = realized_utility_switched_1
+                    else:
+                        best_switch_choice = switch_choice_2
+                        best_realized_utility = realized_utility_switched_2
+
+                    chosen_career = best_switch_choice
+                    realized_utility = best_realized_utility
                     self.switched_careers[k, i - 1] = 1
-                    # Track switches by original career choice (1, 2, or 3)
-                    self.switched_careers_by_choice[original_career+1][k, i - 1] = 1
+                    self.switched_careers_by_choice[original_career][k, i - 1] = 1
 
                 self.chosen_careers_switched[k, i - 1] = chosen_career
                 self.expected_utilities_post_switch[k, i - 1] = prior_expected_utility[chosen_career]
-                self.realized_utilities_post_switch[k, i - 1] = realized_utility
+                self.realized_utilities_post_switch[k, i - 1] = realized_utility        
 
     def analyze_results(self):
         #Takes the mean of the three wanted parameters:
