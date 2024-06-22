@@ -260,8 +260,12 @@ class CareerChoiceModel:
 
                 #The now known utility from the chosen career, can be find as the same way as in 2.A
                 epsilon_mean = self.epsilon_mean_by_original_choice[original_career]
+
+                # The person now knows both the utility and the mean of the epsilons as in exercise 2.A 
                 Utility_known_chosen = self.par.v[original_career] + epsilon_mean[original_career]
-                
+                # As explained we did not choose self.par.v[original_career]  + individual_noise[original_career]
+
+
                 # Determine the best switch option
                 if prior_utility_from_switch_1 > Utility_known_chosen or prior_utility_from_switch_2 > Utility_known_chosen:
                     if prior_utility_from_switch_1 > prior_utility_from_switch_2:
@@ -272,13 +276,13 @@ class CareerChoiceModel:
                         best_realized_utility = realized_utility_switched_2
 
                     chosen_career = best_switch_choice
-                    realized_utility = best_realized_utility
+                    Utility_known_chosen = best_realized_utility
                     self.switched_careers[k, i - 1] = 1
                     self.switched_careers_by_choice[original_career][k, i - 1] = 1
 
                 self.chosen_careers_switched[k, i - 1] = chosen_career
                 self.expected_utilities_post_switch[k, i - 1] = prior_expected_utility[chosen_career]
-                self.realized_utilities_post_switch[k, i - 1] = realized_utility        
+                self.realized_utilities_post_switch[k, i - 1] = Utility_known_chosen        
 
     def analyze_results(self):
         #Takes the mean of the three wanted parameters:
@@ -288,15 +292,15 @@ class CareerChoiceModel:
 
         return chosen_careers_mean, expected_utilities_prior_mean, realized_utilities_mean
     
+    
     def analyze_results_switched(self):
         chosen_careers_mean = np.mean(self.chosen_careers_switched, axis=0)
         expected_utilities_post_switch_mean = np.mean(self.expected_utilities_post_switch, axis=0)
         realized_utilities_post_switch_mean = np.mean(self.realized_utilities_post_switch, axis=0)
         switch_rate = np.mean(self.switched_careers, axis=0)
 
-        return chosen_careers_mean, expected_utilities_post_switch_mean, realized_utilities_post_switch_mean, switch_rate
-       
-    
+        return chosen_careers_mean, expected_utilities_post_switch_mean, realized_utilities_post_switch_mean, switch_rate 
+
     def visualize_results(self):
         chosen_careers_mean, expected_utilities_prior_mean, realized_utilities_mean = self.analyze_results()
 
@@ -344,7 +348,7 @@ class CareerChoiceModel:
         # Plot switch rates for each original career choice
         plt.figure(figsize=(10, 6))
         for original_choice in self.switched_careers_by_choice:
-            plt.plot(range(1, self.par.N + 1), np.mean(self.switched_careers_by_choice[original_choice], axis=0), label=f'Original Career {original_choice}')
+            plt.plot(range(1, self.par.N + 1), np.mean(self.switched_careers_by_choice[original_choice], axis=0), label=f'Original Career {original_choice+1}')
         plt.xlabel('Number of Friends (Fi)')
         plt.ylabel('Share of Graduates Switching Careers')
         plt.legend()
