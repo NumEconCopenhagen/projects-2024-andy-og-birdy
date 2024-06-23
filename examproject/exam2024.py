@@ -478,7 +478,7 @@ class BarycentricInterpolation:
         
         # Calculate barycentric coordinates with respect to triangle CDA
         r1, r2, r3 = BarycentricInterpolation.barycentric_coordinates(C, D, A, y)
-        if BarycentricInterpolation.is_inside_triangle(r1, r2, r3):
+        if  BarycentricInterpolation.is_inside_triangle(r1, r2, r3):
             print(f"Point y is inside triangle CDA: {r1}, {r2}, {r3}")
             f_C = f_values[np.where((X == C).all(axis=1))[0][0]]
             f_D = f_values[np.where((X == D).all(axis=1))[0][0]]
