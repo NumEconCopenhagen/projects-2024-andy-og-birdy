@@ -342,6 +342,8 @@ class CareerChoiceModel:
     def visualize_results_switched(self):
         chosen_careers_mean_switched, expected_utilities_post_switch_mean, realized_utilities_post_switch_mean, switch_rate = self.analyze_results_switched()
 
+
+
         # Plot the share of graduates choosing each career after switching
         plt.figure(figsize=(10, 6))
         for j in range(self.par.J):
@@ -350,16 +352,6 @@ class CareerChoiceModel:
         plt.ylabel('Share of Graduates Choosing Career')
         plt.legend()
         plt.title('Share of Graduates Choosing Each Career Track (Post-Switching)')
-        plt.show()
-
-        # Plot switch rates for each original career choice
-        plt.figure(figsize=(10, 6))
-        for original_choice in self.switched_careers_by_choice:
-            plt.plot(range(1, self.par.N + 1), np.mean(self.switched_careers_by_choice[original_choice], axis=0), label=f'Original Career {original_choice+1}')
-        plt.xlabel('Number of Friends (Fi)')
-        plt.ylabel('Share of Graduates Switching Careers')
-        plt.legend()
-        plt.title('Share of Graduates Switching Careers After First Year by Original Career Choice')
         plt.show()
 
         # Plot the average subjective expected utility (Updated titles)
@@ -376,6 +368,27 @@ class CareerChoiceModel:
         plt.xlabel('Number of Friends (Fi)')
         plt.ylabel('Average Realized Utility')
         plt.title('Average Realized Utility for Graduates After Switching Careers')
+        plt.show()
+
+
+        overall_switch_rate = np.mean(self.switched_careers, axis=0)
+        plt.figure(figsize=(10, 6))
+        total_choices = len(self.switched_careers_by_choice)  # Total number of original choices
+        for original_choice in self.switched_careers_by_choice:
+            # Calculate the fraction (original choices / all choices)
+            fraction = 1 / total_choices
+            # Compute the mean switch rates for the current original choice
+            mean_switch_rates = np.mean(self.switched_careers_by_choice[original_choice], axis=0)
+            # Divide the switch rates by the fraction
+            adjusted_switch_rates = mean_switch_rates / fraction
+            # Plot the adjusted switch rates
+            plt.plot(range(1, self.par.N + 1), adjusted_switch_rates, label=f'Original Career {original_choice+1}')
+        #Plot the overall share of switches.
+        plt.plot(range(1, self.par.N + 1), overall_switch_rate, label='Overall Switch Rate', linestyle='--', color='black')
+        plt.xlabel('Number of Friends (Fi)')
+        plt.ylabel('Share of Graduates Switching Careers')
+        plt.legend()
+        plt.title('Share of Graduates Switching Careers After First Year by Original Career Choice')
         plt.show()
 
 
